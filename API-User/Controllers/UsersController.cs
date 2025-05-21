@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using API_User.Models;
+using API_User.Services;
+using Microsoft.AspNetCore.Mvc;
 
 
 namespace API_User.Controllers
@@ -7,32 +9,46 @@ namespace API_User.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        [HttpGet]
-        public IEnumerable<string> Get()
+        private readonly IUserService _userService;
+        public UsersController(IUserService userService)
         {
-            return new string[] { "value1", "value2" };
+            _userService = userService;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _userService.GetAllUsersAsync();
+            return Ok(users);
         }
 
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<IActionResult> GetUser(string id)
         {
-            return "value";
+            var user = await _userService.GetUserByIdAsync(id);
+            return user != null ? Ok(user) : NotFound();
         }
 
         [HttpPost]
-        public void Post([FromBody] string value)
+        public async Task<IActionResult> CreateUser([FromBody] User user)
         {
+            await _userService.AddUserAsync(user);
+            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
         }
 
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public async Task<IActionResult> UpdateUser(string id, [FromBody] User user)
         {
+            user.Id = id;
+            await _userService.UpdateUserAsync(user);
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> DeleteUser(string id)
         {
-
+            await _userService.DeleteUserAsync(id);
+            return NoContent();
         }
     }
 }

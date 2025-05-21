@@ -23,7 +23,6 @@ namespace API_User.Services
 
         public async Task AddUserAsync(User user)
         {
-            // Exemplo: validação antes de salvar
             if (string.IsNullOrEmpty(user.Name))
                 throw new ArgumentException("O nome do usuário é obrigatório.");
 
