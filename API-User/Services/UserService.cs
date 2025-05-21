@@ -1,4 +1,5 @@
-﻿using API_User.Models;
+﻿using API_User.Authentication.Encryption;
+using API_User.Models;
 using API_User.Repositories;
 
 namespace API_User.Services
@@ -6,10 +7,13 @@ namespace API_User.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        private readonly IValidations _validations;
 
-        public UserService(IUserRepository userRepository)
+
+        public UserService(IUserRepository userRepository, IValidations validations)
         {
             _userRepository = userRepository;
+            _validations = validations;
         }
         public async Task<User?> GetUserByIdAsync(string id)
         {
@@ -23,9 +27,18 @@ namespace API_User.Services
 
         public async Task AddUserAsync(User user)
         {
-            if (string.IsNullOrEmpty(user.Name))
-                throw new ArgumentException("O nome do usuário é obrigatório.");
+            var result = _userRepository.GetAllAsync().Result.FirstOrDefault(x => x.Email == user.Email);
 
+            if(result.Email == user.Email)
+            {
+                throw new ArgumentException("This email is already registered in the systems.");
+            }
+
+            if (string.IsNullOrEmpty(user.Name))
+                throw new ArgumentException("The username is mandatory.");
+
+
+            user.PassWord = _validations.HashPassword(user.PassWord);
             await _userRepository.AddAsync(user);
         }
 
