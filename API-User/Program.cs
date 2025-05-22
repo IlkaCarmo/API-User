@@ -1,3 +1,4 @@
+using API_User.Authentication.Encryption;
 using API_User.Repositories;
 using API_User.Services;
 
@@ -8,6 +9,8 @@ builder.Services.AddControllers();
 builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDbSettings"));
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IValidations, Validations>();
+
 
 // Configuração do Swagger
 builder.Services.AddEndpointsApiExplorer();

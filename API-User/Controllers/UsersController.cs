@@ -1,6 +1,7 @@
 ﻿using API_User.Models;
 using API_User.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 
 namespace API_User.Controllers
@@ -32,8 +33,25 @@ namespace API_User.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromBody] User user)
         {
-            await _userService.AddUserAsync(user);
-            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState); 
+            }
+
+            try
+            {
+                await _userService.AddUserAsync(user);
+
+                return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = "An unexpected error occurred.", Details = ex.Message });
+            };
         }
 
         [HttpPut("{id}")]

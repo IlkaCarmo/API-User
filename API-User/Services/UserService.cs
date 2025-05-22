@@ -1,6 +1,8 @@
 ﻿using API_User.Authentication.Encryption;
+using API_User.Exeptions;
 using API_User.Models;
 using API_User.Repositories;
+using System.ComponentModel.DataAnnotations;
 
 namespace API_User.Services
 {
@@ -8,12 +10,14 @@ namespace API_User.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly IValidations _validations;
+        private readonly ILogger<UserService> _logger;
 
-
-        public UserService(IUserRepository userRepository, IValidations validations)
+        public UserService(IUserRepository userRepository, IValidations validations, ILogger<UserService> logger)
         {
             _userRepository = userRepository;
             _validations = validations;
+            _logger = logger;
+
         }
         public async Task<User?> GetUserByIdAsync(string id)
         {
@@ -27,16 +31,18 @@ namespace API_User.Services
 
         public async Task AddUserAsync(User user)
         {
-            var result = _userRepository.GetAllAsync().Result.FirstOrDefault(x => x.Email == user.Email);
+            var users = await _userRepository.GetAllAsync();
 
-            if(result.Email == user.Email)
+            var result = users.FirstOrDefault(x => x.Email == user.Email);
+
+            if (result != null)
             {
-                throw new ArgumentException("This email is already registered in the systems.");
+                if (result != null)
+                {
+                    _logger.LogError("This email is already registered in the system.");
+                    throw new ValidationException("This email is already registered in the system.");
+                }
             }
-
-            if (string.IsNullOrEmpty(user.Name))
-                throw new ArgumentException("The username is mandatory.");
-
 
             user.PassWord = _validations.HashPassword(user.PassWord);
             await _userRepository.AddAsync(user);
